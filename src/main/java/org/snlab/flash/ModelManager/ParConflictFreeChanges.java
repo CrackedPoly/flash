@@ -1,20 +1,20 @@
 package org.snlab.flash.ModelManager;
 
 
+import org.snlab.network.Port;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.snlab.network.Port;
-
-public class ConflictFreeChanges {
-    private final BDDEngine bddEngine;
+public class ParConflictFreeChanges {
+    private final ParBDDEngine bddEngine;
     private final HashMap<Port, Number> newPortToBdd;
     private final HashMap<Number, TreeMap<Integer, Port>> predToChanges;
 
     private int changeCnt;
 
-    public ConflictFreeChanges(BDDEngine bddEngine) {
+    public ParConflictFreeChanges(ParBDDEngine bddEngine) {
         this.bddEngine = bddEngine;
         this.newPortToBdd = new HashMap<>();
         this.predToChanges = new HashMap<>();
@@ -25,18 +25,18 @@ public class ConflictFreeChanges {
      * A predicate deltaBdd changes its action oldPort to newPort.
      * This method does the 1st aggregation according to (oldPort => newPort) pair.
      */
-    public void add(Number deltaBdd, Port oldPort, Port newPort) {
+    public void add(long deltaBdd, Port oldPort, Port newPort) {
         if (oldPort == newPort) {
-            bddEngine.deRef(deltaBdd.intValue());
+            bddEngine.deRef(deltaBdd);
             return;
         }
 
         if (newPortToBdd.containsKey(newPort)) {
-            int t = newPortToBdd.get(newPort).intValue();
-            int union = bddEngine.or(t, deltaBdd.intValue());
+            Number t = newPortToBdd.get(newPort);
+            long union = bddEngine.or(t.longValue(), deltaBdd);
             newPortToBdd.replace(newPort, union);
-            bddEngine.deRef(t);
-            bddEngine.deRef(deltaBdd.intValue());
+            bddEngine.deRef(t.longValue());
+            bddEngine.deRef(deltaBdd);
         } else {
             newPortToBdd.put(newPort, deltaBdd);
         }
@@ -56,14 +56,14 @@ public class ConflictFreeChanges {
         }
     }
 
-    public void merge(ConflictFreeChanges t) {
+    public void merge(ParConflictFreeChanges t) {
         for (Map.Entry<Port, Number> entry : t.newPortToBdd.entrySet()) {
-            this.add(entry.getValue(), null, entry.getKey());
+            this.add(entry.getValue().longValue(), null, entry.getKey());
         }
     }
 
     public void releaseBDDs() {
-        for (Number bdd : newPortToBdd.values()) bddEngine.deRef(bdd.intValue());
+        for (Number bdd : newPortToBdd.values()) bddEngine.deRef(bdd.longValue());
     }
 
     public int aggr0Size() {

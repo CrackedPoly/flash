@@ -13,13 +13,13 @@ public class Checker {
     static HashSet predicates;
     static HashMap<Device, HashSet> sourceToPreds;
 
-    public static double allPair(Network network, HashMap<Port, HashSet<Integer>> model) {
+    public static double allPair(Network network, HashMap<Port, HashSet<Number>> model) {
         predicates = new HashSet<>();
         sourceToPreds = new HashMap<>();
 
         double s = 0;
         s -= System.nanoTime();
-        for (HashSet<Integer> preds : model.values()) predicates.addAll(preds);
+        for (HashSet<Number> preds : model.values()) predicates.addAll(preds);
         for (Device device : network.getAllDevices()) sourceToPreds.put(device, new HashSet<>());
         for (Device device : network.getAllDevices()) {
             traverse(model, device, new HashSet<>(predicates), new ArrayList<>()); // null represents the universal set
@@ -77,7 +77,7 @@ public class Checker {
         history.remove(current);
     }
 
-    public static void traverse(HashMap<Port, HashSet<Integer>> model, Device current, HashSet<Integer> pset, ArrayList<Device> history) {
+    public static void traverse(HashMap<Port, HashSet<Number>> model, Device current, HashSet<Number> pset, ArrayList<Device> history) {
         if (pset == null) return;
         pset.removeAll(sourceToPreds.get(current));
         if (pset.size() == 0 || history.contains(current)) return;
@@ -89,7 +89,7 @@ public class Checker {
             if (t == null) { // send to black hole (default) or an external port
                 continue;
             }
-            HashSet<Integer> labels = model.get(egress), intersection;
+            HashSet<Number> labels = model.get(egress), intersection;
             if (labels != null) {
                 intersection = new HashSet<>(pset);
                 intersection.retainAll(labels);

@@ -27,21 +27,21 @@ public class PropertyChecker {
     private Graph<Device, PGEdge> pg;
     private int hs;
     private Set<Device> closed = new HashSet<>();
-    private Map<Integer, Graph<Device, PGEdge>> ecToPg = new HashMap<>();
-    private Map<Integer, ConnectivityInspector<Device, PGEdge>> ecToCI = new HashMap<>();
+    private Map<Number, Graph<Device, PGEdge>> ecToPg = new HashMap<>();
+    private Map<Number, ConnectivityInspector<Device, PGEdge>> ecToCI = new HashMap<>();
     private List<Device> sources;
 
     public PropertyChecker() {
     }
 
-    public void checkLoop(Network network, Map<Port, HashSet<Integer>> model, Set<Integer> transfered) {
+    public void checkLoop(Network network, Map<Port, HashSet<Number>> model, Set<Number> transfered) {
         for (Device device : network.getAllDevices()) {
             traverse(device, transfered, new HashSet<>(), model);
         }
     }
 
-    private void traverse(Device current, Set<Integer> predicates, HashSet<Device> history,
-            Map<Port, HashSet<Integer>> networkModel) {
+    private void traverse(Device current, Set<Number> predicates, HashSet<Device> history,
+            Map<Port, HashSet<Number>> networkModel) {
         if (this.hasLoop)
             return;
         if (current == null)
@@ -57,7 +57,7 @@ public class PropertyChecker {
         for (Port egress : current.getPorts()) {
             // if egress is default, alter blackhole
             Device t = egress.getPeerDevice();
-            HashSet<Integer> labels = networkModel.get(egress), intersection;
+            HashSet<Number> labels = networkModel.get(egress), intersection;
             if (labels != null) {
                 if (predicates != null) {
                     intersection = new HashSet<>(predicates);
@@ -81,15 +81,15 @@ public class PropertyChecker {
                 .collect(Collectors.toList());
     }
 
-    public void check(Device newClosed, Collection<Integer> ECs, Map<Integer, Ports> ecToPorts) {
+    public void check(Device newClosed, Collection<Number> ECs, Map<Number, Ports> ecToPorts) {
         this.closed.add(newClosed);
         if (!this.pg.vertexSet().contains(newClosed)) {
             return;
         }
 
-        for (int ec : ECs) {
-            if (bddEngine.and(ec, hs) != 0) {
-                if (!ecToPg.containsKey(ec)) {
+        for (Number ec : ECs) {
+            if (bddEngine.and(ec.intValue(), hs) != 0) {
+                if (!ecToPg.containsKey(ec.intValue())) {
                     // create pg copy
                     Graph<Device, PGEdge> pg = clonePG();
                     // remove edges for closed switches
@@ -149,7 +149,7 @@ public class PropertyChecker {
         return pg;
     }
 
-    private void reducePG(Graph<Device, PGEdge> pg, Map<Integer, Ports> ecToPorts, int ec) {
+    private void reducePG(Graph<Device, PGEdge> pg, Map<Number, Ports> ecToPorts, Number ec) {
         for (Device device : pg.vertexSet()) {
             if (!closed.contains(device)) {
                 continue;

@@ -55,7 +55,7 @@ public class EpochInstance {
                 }
             }
             ConflictFreeChanges cgs = model.miniBatch(insertions, deletions);
-            Set<Integer> transfered = model.update(cgs);
+            Set<Number> transfered = model.update(cgs);
 
             if (Main.evalOptions.mode.equals("PUV") || Main.evalOptions.mode.equals("BUV")) {
 

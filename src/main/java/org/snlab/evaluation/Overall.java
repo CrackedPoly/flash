@@ -4,6 +4,8 @@ import org.jgrapht.alg.util.Pair;
 import org.snlab.evaluation.others.APVerifier;
 import org.snlab.evaluation.others.AtomVerifier;
 import org.snlab.evaluation.others.Checker;
+import org.snlab.flash.ModelManager.ParConflictFreeChanges;
+import org.snlab.flash.ModelManager.ParInverseModel;
 import org.snlab.flash.ModelManager.Ports.ArrayPorts;
 import org.snlab.flash.ModelManager.Ports.Ports;
 import org.snlab.flash.ModelManager.Ports.PersistentPorts;
@@ -50,61 +52,61 @@ public class Overall {
         if (ans.equals("y")) {
             Network network = LNetNetwork.getLNET1().setName("LNet1");
             network.filterIntoSubsapce(1L << 24, ((1L << 8) - 1) << 24);
-            evaluateOnSnapshot(network, false, true, false);
+            evaluateOnSnapshot(network, false, true, false, false);
         }
 
         // Figure 6: settings w/o subspace
         System.out.println("2. Try Deltanet* (w/o subspace) on LNet1? (y/n)");
         ans = scanner.nextLine();
         if (ans.equals("y")) {
-            evaluateOnSnapshot(LNetNetwork.getLNET1().setName("LNet1"), true, false, false);
+            evaluateOnSnapshot(LNetNetwork.getLNET1().setName("LNet1"), true, false, false, false);
         }
 
         System.out.println("3. Try Deltanet* (w/o subspace) on LNet*? (y/n)");
         ans = scanner.nextLine();
         if (ans.equals("y")) {
-            evaluateOnSnapshot(LNetNetwork.getLNETStar().setName("LNet*"), true, false, false);
+            evaluateOnSnapshot(LNetNetwork.getLNETStar().setName("LNet*"), true, false, false, false);
         }
 
         System.out.println("4. Try APKeep* (w/o subspace) on LNet1? (y/n)");
         ans = scanner.nextLine();
         if (ans.equals("y")) {
-            evaluateOnSnapshot(LNetNetwork.getLNET1().setName("LNet1"), false, true, false);
+            evaluateOnSnapshot(LNetNetwork.getLNET1().setName("LNet1"), false, true, false, false);
         }
 
         System.out.println("5. Try APKeep* (w/o subspace) on LNet*? (y/n)");
         ans = scanner.nextLine();
         if (ans.equals("y")) {
-            evaluateOnSnapshot(LNetNetwork.getLNETStar().setName("LNet*"), false, true, false);
+            evaluateOnSnapshot(LNetNetwork.getLNETStar().setName("LNet*"), false, true, false, false);
         }
     }
 
     public static void run() {
 
-        Network network = LNetNetwork.getLNET().setName("LNet0");
-        network.filterIntoSubsapce(1L << 24, ((1L << 8) - 1) << 24);
-        evaluateOnSnapshot(network);
-        network = null;
-        System.gc();
+//        Network network = LNetNetwork.getLNET().setName("LNet0");
+//        network.filterIntoSubsapce(1L << 24, ((1L << 8) - 1) << 24);
+//        evaluateOnSnapshot(network);
+//        network = null;
+//        System.gc();
+//
+//        network = LNetNetwork.getLNET1().setName("LNet1");
+//        network.filterIntoSubsapce(1L << 24, ((1L << 8) - 1) << 24);
+//        evaluateOnSnapshot(network);
+//        network = null;
+//        System.gc();
+//
+//        network = LNetNetwork.getLNETStar().setName("LNet*");
+//        network.filterIntoSubsapce(1L << 24, ((1L << 8) - 1) << 24);
+//        evaluateOnSnapshot(network);
+//        network = null;
+//        System.gc();
 
-        network = LNetNetwork.getLNET1().setName("LNet1");
-        network.filterIntoSubsapce(1L << 24, ((1L << 8) - 1) << 24);
-        evaluateOnSnapshot(network);
-        network = null;
-        System.gc();
-
-        network = LNetNetwork.getLNETStar().setName("LNet*");
-        network.filterIntoSubsapce(1L << 24, ((1L << 8) - 1) << 24);
-        evaluateOnSnapshot(network);
-        network = null;
-        System.gc();
-
-        try {
-            evaluateOnUpdatesSequence(Airtel1Network.getNetwork().setName("Airtel1"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        evaluateOnSnapshot(StanfordNetwork.getNetwork().setName("Stanford"));
+//        try {
+//            evaluateOnUpdatesSequence(Airtel1Network.getNetwork().setName("Airtel1"));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        evaluateOnSnapshot(StanfordNetwork.getNetwork().setName("Stanford"));
         evaluateOnSnapshot(I2Network.getNetwork().setName("Internet2"));
         System.gc();
     }
@@ -137,10 +139,10 @@ public class Overall {
 
     // Table 3
     public static void evaluateOnSnapshot(Network network) {
-        evaluateOnSnapshot(network, true, true, true);
+        evaluateOnSnapshot(network, true, true, true, true);
     }
 
-    public static void evaluateOnSnapshot(Network network, boolean tryDeletanet, boolean tryApkeep, boolean tryFlash) {
+    public static void evaluateOnSnapshot(Network network, boolean tryDeletanet, boolean tryApkeep, boolean tryFlash, boolean tryNeoFlash) {
         System.gc();
         System.out.println("# Rules: " + network.getInitialRules().size() + " # Switches: " + network.getAllDevices().size());
 
@@ -168,6 +170,12 @@ public class Overall {
             for (int i = 0; i < warmupRepeat; i++) seq(network, true);
             System.out.println("==================== Warmed ==================== ");
             for (int i = 0; i < testRepeat; i++) s3 += seq(network, true);
+            System.out.println("==================== Ended ==================== ");
+        }
+        if (tryNeoFlash) {
+            for (int i = 0; i < warmupRepeat; i++) seqNeo(network, true);
+            System.out.println("==================== Warmed ==================== ");
+            for (int i = 0; i < testRepeat; i++) s3 += seqNeo(network, true);
             System.out.println("==================== Ended ==================== ");
         }
         /*
@@ -199,7 +207,7 @@ public class Overall {
         printWriter.println();
 
         double s;
-        HashMap<Port, HashSet<Integer>> model = ver1.getPortToPredicate();
+        HashMap<Port, HashSet<Number>> model = ver1.getPortToPredicate();
 
         s = 0;
         for (int i = 0; i < warmupRepeat; i ++) model = ver1.getPortToPredicate();
@@ -319,6 +327,39 @@ public class Overall {
             t4 += verifier.bddEngine.opCnt;
         }
         System.out.println("Flash #EC: " + verifier.predSize() + (asBatch ? " with Batch" : " w/o Batch"));
+        return verifier.printTime(network.getInitialRules().size() * (testDeletion ? 2 : 1));
+    }
+
+    private static double seqNeo(Network network, boolean asBatch) {
+        System.gc();
+        memoryBefore = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        ParInverseModel verifier = new ParInverseModel(network, new PersistentPorts());
+        if (asBatch) {
+            ParConflictFreeChanges conflictFreeChanges = verifier.insertMiniBatch(network.getInitialRules());
+            verifier.update(conflictFreeChanges);
+            m3 += printMemory();
+            if (testDeletion) {
+                System.out.println("NeoFlash #EC (full snapshot): " + verifier.predSize() + " with Batch");
+                conflictFreeChanges = verifier.miniBatch(new ArrayList<>(), network.getInitialRules());
+                verifier.update(conflictFreeChanges);
+            }
+            t3 += verifier.bddEngine.opCnt;
+        } else {
+            for (Rule rule : network.getInitialRules()) {
+                ParConflictFreeChanges conflictFreeChanges = verifier.insertMiniBatch(new ArrayList<>(Collections.singletonList(rule)));
+                verifier.update(conflictFreeChanges);
+            }
+            m4 += printMemory();
+            if (testDeletion) {
+                System.out.println("NeoFlash #EC (deleted to empty): " + verifier.predSize() + " w/o Batch");
+                for (Rule rule : network.getInitialRules()) {
+                    ParConflictFreeChanges conflictFreeChanges = verifier.miniBatch(new ArrayList<>(), new ArrayList<>(Collections.singletonList(rule)));
+                    verifier.update(conflictFreeChanges);
+                }
+            }
+            t4 += verifier.bddEngine.opCnt;
+        }
+        System.out.println("NeoFlash #EC: " + verifier.predSize() + (asBatch ? " with Batch" : " w/o Batch"));
         return verifier.printTime(network.getInitialRules().size() * (testDeletion ? 2 : 1));
     }
 

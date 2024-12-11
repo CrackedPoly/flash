@@ -51,8 +51,8 @@ public class LNet1AllPair {
             // if (policyChecker.stop) {
             // break;
             // }
-            HashMap<Integer, Ports> ecToPorts = new HashMap<>();
-            for (Map.Entry<Ports, Integer> entry : verifier.portsToPredicate.entrySet()) {
+            HashMap<Number, Ports> ecToPorts = new HashMap<>();
+            for (Map.Entry<Ports, Number> entry : verifier.portsToPredicate.entrySet()) {
                 ecToPorts.put(entry.getValue(), entry.getKey());
             }
             long s = System.nanoTime();

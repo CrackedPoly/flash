@@ -265,11 +265,11 @@ public class AtomVerifier {
         return s;
     }
 
-    public HashMap<Port, HashSet<Integer>> getPortToPredicate() {
-        HashMap<Port, HashSet<Integer>> ret = new HashMap<>();
+    public HashMap<Port, HashSet<Number>> getPortToPredicate() {
+        HashMap<Port, HashSet<Number>> ret = new HashMap<>();
 
         for (Map.Entry<Port, HashSet<Long>> entry : label.entrySet()) {
-            HashSet<Integer> preds = new HashSet<>();
+            HashSet<Number> preds = new HashSet<>();
             for (Long atom : entry.getValue()) preds.add(atoms.subSet(0L, atom).size());
             ret.put(entry.getKey(), preds);
         }

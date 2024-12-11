@@ -16,12 +16,12 @@ public class EarlyDetector {
     public boolean hasLoop = false;
     public boolean useSingleThread = false;
 
-    public void detectLoop(Setting setting, Network network, Set<Device> newClosed, Map<Port, HashSet<Integer>> model) {
+    public void detectLoop(Setting setting, Network network, Set<Device> newClosed, Map<Port, HashSet<Number>> model) {
         this.detectLoop(setting, network, newClosed, model, null);
     }
 
-    public void detectLoop(Setting setting, Network network, Set<Device> newClosed, Map<Port, HashSet<Integer>> model,
-            Set<Integer> transfered) {
+    public void detectLoop(Setting setting, Network network, Set<Device> newClosed, Map<Port, HashSet<Number>> model,
+            Set<Number> transfered) {
         this.closedDevices.addAll(newClosed);
         if (this.useSingleThread) {
             LoopDetector ld = new LoopDetector(setting, network, Set.copyOf(this.closedDevices), newClosed, model,
@@ -52,16 +52,16 @@ class LoopDetector implements Runnable {
     private Network network;
     private Setting setting;
     public boolean hasLoop = false;
-    private Map<Port, HashSet<Integer>> model;
-    private Set<Integer> transfered;
+    private Map<Port, HashSet<Number>> model;
+    private Set<Number> transfered;
 
     public LoopDetector(Setting setting, Network network, Set<Device> closed, Set<Device> newClosed,
-            Map<Port, HashSet<Integer>> model) {
+            Map<Port, HashSet<Number>> model) {
         this(setting, network, closed, newClosed, model, null);
     }
 
     public LoopDetector(Setting setting, Network network, Set<Device> closed, Set<Device> newClosed,
-            Map<Port, HashSet<Integer>> model, Set<Integer> transfered) {
+            Map<Port, HashSet<Number>> model, Set<Number> transfered) {
         this.setting = setting;
         this.network = network;
         this.closed = closed;
@@ -79,8 +79,8 @@ class LoopDetector implements Runnable {
         }
     }
 
-    private void traverse(Device current, Set<Integer> predicates, HashSet<Device> history,
-            Map<Port, HashSet<Integer>> networkModel, Set<Device> closed) {
+    private void traverse(Device current, Set<Number> predicates, HashSet<Device> history,
+            Map<Port, HashSet<Number>> networkModel, Set<Device> closed) {
         if (this.hasLoop)
             return;
         if (predicates != null && predicates.isEmpty())
@@ -89,7 +89,7 @@ class LoopDetector implements Runnable {
             long edTime = (System.nanoTime() - (setting.startAt == 0 ? Dispatcher.logger.startAt : setting.startAt));
             int processedUpdates = this.network.getAllDevices().stream().filter(closed::contains)
                     .map(device -> device.getInitialRules().size()).collect(Collectors.toList()).stream()
-                    .mapToInt(Integer::intValue).sum();
+                    .mapToInt(Number::intValue).sum();
 
             if (!this.hasLoop) {
                 this.hasLoop = true;
@@ -108,7 +108,7 @@ class LoopDetector implements Runnable {
         }).collect(Collectors.toList())) {
             // if egress is default, alter blackhole
             Device t = egress.getPeerDevice();
-            HashSet<Integer> labels = networkModel.get(egress), intersection;
+            HashSet<Number> labels = networkModel.get(egress), intersection;
             if (labels != null) {
                 if (predicates != null) {
                     intersection = new HashSet<>(predicates);
